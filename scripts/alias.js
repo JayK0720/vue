@@ -1,7 +1,7 @@
 const path = require('path')
 
-const resolve = p => path.resolve(__dirname, '../', p)
-
+const resolve = p => path.resolve(__dirname, '../', p)  // 根目录
+// 为web weex vue 配置的别名,
 module.exports = {
   vue: resolve('src/platforms/web/entry-runtime-with-compiler'),
   compiler: resolve('src/compiler'),

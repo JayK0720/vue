@@ -27,10 +27,13 @@ const weexFactoryPlugin = {
 
 const aliases = require('./alias')
 const resolve = p => {
-  const base = p.split('/')[0]
-  if (aliases[base]) {
+  // p: web/entry-runtime-with-compiler.js
+  const base = p.split('/')[0]  // 取出第一字符串, 如web weex
+  if (aliases[base]) {  // web 在根目录下 src/platforms/web 再拼接上 entry-runtime-with-compiler.js
     return path.resolve(aliases[base], p.slice(base.length + 1))
   } else {
+    // dist/vue.js 在alias配置中没有找到别名,
+    console.log(__dirname)
     return path.resolve(__dirname, '../', p)
   }
 }
@@ -213,8 +216,8 @@ const builds = {
   }
 }
 
-function genConfig (name) {
-  const opts = builds[name]
+function genConfig (name) { // 解析target,比如执行npm run dev, 此时name为 web-full-dev
+  const opts = builds[name] // builds为一个对象, 键名为传递的TARGET, 键值为 打包时的配置选项对象
   const config = {
     input: opts.entry,
     external: opts.external,
@@ -262,7 +265,7 @@ function genConfig (name) {
 
   return config
 }
-
+// 判断是否设置了打包时的参数 TARGET
 if (process.env.TARGET) {
   module.exports = genConfig(process.env.TARGET)
 } else {

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>runtime and full compiler</title>
+</head>
+<body>
+  <div id="app">
+    <player></player>
+  </div>
+  <script src='../../dist/vue.js'></script>
+  <script>
+    // new Vue({
+    //   el:'#app',
+    //   data() {
+    //     return {
+    //       msg: 'hello world'
+    //     }
+    //   },
+    //   render(h) {
+    //     return h('div',this.msg)
+    //   }
+    // })
+    // const instance = new Vue({
+    //   template:`<div>我是template</div>`,
+    // }).$mount('#app')
+    // new Vue({
+    //   el:'#app',
+    //   // template:`<h1>{{msg}}</h1>`,
+    //   render(h) {
+    //     return h('div',[
+    //       h('h1','hello'),
+    //       h('div',[
+    //         h('h1','我是children')
+    //       ])
+    //     ])
+    //   },
+    //   data() {
+    //     return {
+    //       msg: 'hello world'
+    //     }
+    //   }
+    // })
+
+  const mixin = {
+    data(){
+      message:'hello'
+    },
+    created(){
+      console.log('mixin-created')
+    }
+  }
+  const instance = new Vue({
+    el:'#app',
+    template:`<div>{{message}} - {{msg}}</div>`,
+    data(){
+      return {
+        message:'world',
+        msg:'message'
+      }
+    },
+    created(){
+      console.log('component-mixin')
+    },
+    mixins:[mixin]
+  })
+  </script>
+</body>
+</html>

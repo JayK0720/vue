@@ -267,15 +267,17 @@ const defaultStrat = function (parentVal: any, childVal: any): any {
     : childVal
 }
 
-/**
- * Validate component names
- */
+// 检测组件名称
 function checkComponents (options: Object) {
   for (const key in options.components) {
     validateComponentName(key)
   }
 }
-
+// 检测组件名称是否为合法的,
+/*
+1. 不能使用html标签名称 作为组件,
+2. 不能使用内置的组件名称 以及在vue.config.js里定义过的名称 作为组件名,
+*/
 export function validateComponentName (name: string) {
   if (!new RegExp(`^[a-zA-Z][\\-\\.0-9_${unicodeRegExp.source}]*$`).test(name)) {
     warn(

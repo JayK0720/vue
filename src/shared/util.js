@@ -176,9 +176,9 @@ export const capitalize = cached((str: string): string => {
 /**
  * Hyphenate a camelCase string.
  */
-const hyphenateRE = /\B([A-Z])/g
+const hyphenateRE = /\B([A-Z])/g  // \B非单词边界匹配
 export const hyphenate = cached((str: string): string => {
-  return str.replace(hyphenateRE, '-$1').toLowerCase()
+  return str.replace(hyphenateRE, '-$1').toLowerCase()  // $1匹配到的第一个大写的字母
 })
 
 /**

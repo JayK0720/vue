@@ -24,17 +24,23 @@ export function validateProp (
   propsData: Object,
   vm?: Component
 ): any {
-  const prop = propOptions[key]
-  const absent = !hasOwn(propsData, key)
+  const prop = propOptions[key] // 每一个接收的参数
+  /**
+   * props:{
+   *  message:[String,Number],
+   *  count:{
+   *    type:[String, Number],
+   *    default: 0
+   *  }
+   * }
+   * */
+  const absent = !hasOwn(propsData, key)  //hasOwn 判断属性是否存在某个对象上
   let value = propsData[key]
-  // boolean casting
-  const booleanIndex = getTypeIndex(Boolean, prop.type)
-  if (booleanIndex > -1) {
-    if (absent && !hasOwn(prop, 'default')) {
+  const booleanIndex = getTypeIndex(Boolean, prop.type) // prop.type 接收
+  if (booleanIndex > -1) {  // 验证成功
+    if (absent && !hasOwn(prop, 'default')) { // 判断是否有default 默认值
       value = false
-    } else if (value === '' || value === hyphenate(key)) {
-      // only cast empty string / same name to boolean if
-      // boolean has higher priority
+    } else if (value === '' || value === hyphenate(key)) {  // 判断是否为驼峰写法
       const stringIndex = getTypeIndex(String, prop.type)
       if (stringIndex < 0 || booleanIndex < stringIndex) {
         value = true
@@ -187,19 +193,27 @@ const functionTypeCheckRE = /^\s*function (\w+)/
  * because a simple equality check will fail when running
  * across different vms / iframes.
  */
-function getType (fn) {
+function getType (fn) { //传递的是构造函数
   const match = fn && fn.toString().match(functionTypeCheckRE)
-  return match ? match[1] : ''
+  return match ? match[1] : ''  // 正则匹配到的结果为 'String' / 'Number' / 'Object'
 }
+
+/*
+String.toString()   'function String(){ [native code] }'
+Object.toString()   'function Object(){ [native code] }'
+*/
 
 function isSameType (a, b) {
   return getType(a) === getType(b)
 }
-
+// 第一个type 为Boolean 构造函数？？？？ 为什么传递Boolean, expectedTypes 为希望参数接收的类型
 function getTypeIndex (type, expectedTypes): number {
+  // 首先判断 type是否为数组
   if (!Array.isArray(expectedTypes)) {
+  // 如果不是数组, 判断传递的数据与type是否为同一个类型,如果是同一个类型,返回数字0,否则返回-1
     return isSameType(expectedTypes, type) ? 0 : -1
   }
+  // 如果传递的是数组, 只要和数组中的一个类型一致就可。
   for (let i = 0, len = expectedTypes.length; i < len; i++) {
     if (isSameType(expectedTypes[i], type)) {
       return i

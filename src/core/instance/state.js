@@ -47,11 +47,11 @@ export function proxy (target: Object, sourceKey: string, key: string) {
 }
 
 export function initState (vm: Component) {
-  vm._watchers = []
+  vm._watchers = [] // 保存所有watcher对象
   const opts = vm.$options
-  if (opts.props) initProps(vm, opts.props)
-  if (opts.methods) initMethods(vm, opts.methods)
-  if (opts.data) {
+  if (opts.props) initProps(vm, opts.props) // 初始化接收父组件传递的 参数
+  if (opts.methods) initMethods(vm, opts.methods) // 初始化methods
+  if (opts.data) {  // 初始化data
     initData(vm)
   } else {
     observe(vm._data = {}, true /* asRootData */)
@@ -63,19 +63,18 @@ export function initState (vm: Component) {
 }
 
 function initProps (vm: Component, propsOptions: Object) {
-  const propsData = vm.$options.propsData || {}
+  const propsData = vm.$options.propsData || {} // propsData 在new Vue()的时候传递
   const props = vm._props = {}
   // cache prop keys so that future props updates can iterate using Array
   // instead of dynamic object key enumeration.
   const keys = vm.$options._propKeys = []
-  const isRoot = !vm.$parent
-  // root instance props should be converted
+  const isRoot = !vm.$parent  // 是否为根组件(判断是否有父组件)
   if (!isRoot) {
     toggleObserving(false)
   }
   for (const key in propsOptions) {
     keys.push(key)
-    const value = validateProp(key, propsOptions, propsData, vm)
+    const value = validateProp(key, propsOptions, propsData, vm)  // 验证传递的props
     /* istanbul ignore else */
     if (process.env.NODE_ENV !== 'production') {
       const hyphenatedKey = hyphenate(key)

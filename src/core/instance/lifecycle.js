@@ -18,7 +18,7 @@ import {
   invokeWithErrorHandling
 } from '../util/index'
 
-export let activeInstance: any = null
+export let activeInstance: any = null // 当前正在渲染的实例的引用
 export let isUpdatingChildComponent: boolean = false
 
 export function setActiveInstance(vm: Component) {
@@ -34,13 +34,18 @@ export function initLifecycle (vm: Component) {
 
   // locate first non-abstract parent
   let parent = options.parent
-  if (parent && !options.abstract) {
+  if (parent && !options.abstract) {  // 有父组件并且当前组件不是抽象组件
     while (parent.$options.abstract && parent.$parent) {
+    // 循环找到父级(第一个非抽象到父组件),然后将当前实例添加到父级的$children属性
+    /*
+    keep-alive 或者 transition 为抽象组件,不渲染真实dom到页面上,抽象组件不会出现在父子组件到路径上。
+    */
       parent = parent.$parent
     }
     parent.$children.push(vm)
   }
 
+  // 分别挂载$parent, $root, $children $refs属性
   vm.$parent = parent
   vm.$root = parent ? parent.$root : vm
 

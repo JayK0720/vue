@@ -15,45 +15,39 @@ let uid = 0
 export function initMixin (Vue: Class<Component>) {
   Vue.prototype._init = function (options?: Object) {
     const vm: Component = this
-    // a uid
     vm._uid = uid++
-
     let startTag, endTag
-    /* istanbul ignore if */
     if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
       startTag = `vue-perf-start:${vm._uid}`
       endTag = `vue-perf-end:${vm._uid}`
       mark(startTag)
     }
-
-    // a flag to avoid this being observed
+    // 标识当前是一个实例
     vm._isVue = true
-    // merge options
+    // 合并options, 判断是组件还是Vue实例
     if (options && options._isComponent) {
-      // optimize internal component instantiation
-      // since dynamic options merging is pretty slow, and none of the
-      // internal component options needs special treatment.
       initInternalComponent(vm, options)
     } else {
       vm.$options = mergeOptions(
-        resolveConstructorOptions(vm.constructor),
-        options || {},
-        vm
+        resolveConstructorOptions(vm.constructor),  // parent
+        options || {},  // child
+        vm  // instance
       )
     }
-    /* istanbul ignore else */
+    // 给vm._renderProxy 赋值为当前vm实例
     if (process.env.NODE_ENV !== 'production') {
       initProxy(vm)
     } else {
       vm._renderProxy = vm
     }
-    // expose real self
-    vm._self = vm
+    vm._self = vm // 真实的实例, vm._renderProxy 可能是一个代理对象
+    // 挂载$children, $parent $root $refs
     initLifecycle(vm)
     initEvents(vm)
     initRender(vm)
     callHook(vm, 'beforeCreate')
     initInjections(vm) // resolve injections before data/props
+    // 初始化props/data/methods/computed/watch等
     initState(vm)
     initProvide(vm) // resolve provide after data/props
     callHook(vm, 'created')
