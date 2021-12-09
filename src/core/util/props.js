@@ -34,20 +34,28 @@ export function validateProp (
    *  }
    * }
    * */
-  const absent = !hasOwn(propsData, key)  //hasOwn 判断属性是否存在某个对象上
-  let value = propsData[key]
-  const booleanIndex = getTypeIndex(Boolean, prop.type) // prop.type 接收
-  if (booleanIndex > -1) {  // 验证成功
-    if (absent && !hasOwn(prop, 'default')) { // 判断是否有default 默认值
+  // propsData 是 props 的子集,因为 接收的props 不一定都传递了
+  /*
+    hasOwn 判断属性是否存在某个对象上
+    判断传递的key，子组件有没有接收 （absent）
+  */
+  const absent = !hasOwn(propsData, key)
+  let value = propsData[key]  //当前值
+  const booleanIndex = getTypeIndex(Boolean, prop.type) // prop.type 接收参数类型
+  // 先判断boolean 是否检测成功
+  if (booleanIndex > -1) {  // 判断传递的是 Boolean类型的时候
+    // 如果没有接收 并且 没有默认值, 在type为boolean的时候 给一个默认值false
+    if (absent && !hasOwn(prop, 'default')) {
       value = false
-    } else if (value === '' || value === hyphenate(key)) {  // 判断是否为驼峰写法
+      // 如果传递的是一个空字符串,  hyphenate,驼峰字符串改为 - 连接字符串
+    } else if (value === '' || value === hyphenate(key)) {
       const stringIndex = getTypeIndex(String, prop.type)
       if (stringIndex < 0 || booleanIndex < stringIndex) {
         value = true
       }
     }
   }
-  // check default value
+  // 判断默认值的情况
   if (value === undefined) {
     value = getPropDefaultValue(vm, prop, key)
     // since the default value is a fresh copy,
@@ -67,16 +75,16 @@ export function validateProp (
   return value
 }
 
-/**
- * Get the default value of a prop.
- */
+// 获取prop的默认值, prop: props的每一个对象, key: 每个传递的字段
 function getPropDefaultValue (vm: ?Component, prop: PropOptions, key: string): any {
-  // no default, return undefined
-  if (!hasOwn(prop, 'default')) {
+  if (!hasOwn(prop, 'default')) { // 如果没有设置默认值,返回undefined
     return undefined
   }
   const def = prop.default
-  // warn against non-factory defaults for Object & Array
+/*  function isObject (obj){
+      return obj !== null && typeof obj === 'object'
+    } */
+  // 对象 或者 数据的默认值必须以 一个函数的形式返回默认值
   if (process.env.NODE_ENV !== 'production' && isObject(def)) {
     warn(
       'Invalid default value for prop "' + key + '": ' +
