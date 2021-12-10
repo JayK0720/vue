@@ -29,21 +29,26 @@ export function toggleObserving (value: boolean) {
 }
 
 /**
- * Observer class that is attached to each observed
- * object. Once attached, the observer converts the target
- * object's property keys into getter/setters that
- * collect dependencies and dispatch updates.
+给对象添加一对 键值
+function def (obj, key, val) {
+  Object.defineProperty(obj, key, {
+    value: val,
+    enumerable: !!enumerable,
+    writable: true,
+    configurable: true
+  })
+}
  */
 export class Observer {
   value: any;
   dep: Dep;
   vmCount: number; // number of vms that have this object as root $data
-
+// 前面已经做了判断, value 是一个对象 或者 数组
   constructor (value: any) {
     this.value = value
     this.dep = new Dep()
     this.vmCount = 0
-    def(value, '__ob__', this)
+    def(value, '__ob__', this)  // 给当前对象添加一个__ob__对象, 是当前对响应式对象,用来缓存
     if (Array.isArray(value)) {
       if (hasProto) {
         protoAugment(value, arrayMethods)
@@ -55,12 +60,7 @@ export class Observer {
       this.walk(value)
     }
   }
-
-  /**
-   * Walk through all properties and convert them into
-   * getter/setters. This method should only be called when
-   * value type is Object.
-   */
+// 将对象对所有属性转换为 getter/setter
   walk (obj: Object) {
     const keys = Object.keys(obj)
     for (let i = 0; i < keys.length; i++) {
@@ -102,24 +102,27 @@ function copyAugment (target: Object, src: Object, keys: Array<string>) {
   }
 }
 
-/**
- * Attempt to create an observer instance for a value,
- * returns the new observer if successfully observed,
- * or the existing observer if the value already has one.
- */
+// 将一个对象转换为响应式对象           asRootData 作为根属性
 export function observe (value: any, asRootData: ?boolean): Observer | void {
+/*   function isObject (obj) {   Array / Object
+    return obj !== null && typeof obj === 'object'
+  } */
+  // 如果不是对象 或者 是VNode 实例 则不需要做响应式处理
   if (!isObject(value) || value instanceof VNode) {
     return
   }
   let ob: Observer | void
+  // 将生成的响应式对象赋值给了 __ob__属性, 有的话直接取出
   if (hasOwn(value, '__ob__') && value.__ob__ instanceof Observer) {
     ob = value.__ob__
   } else if (
     shouldObserve &&
     !isServerRendering() &&
+    // isPlainObject
     (Array.isArray(value) || isPlainObject(value)) &&
+    // Object.isExtensible() 判断一个对象是否是可以扩展的(可以添加新的属性)
     Object.isExtensible(value) &&
-    !value._isVue
+    !value._isVue// Vue实例对象不需要进行响应式处理
   ) {
     ob = new Observer(value)
   }

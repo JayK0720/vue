@@ -36,6 +36,10 @@ const sharedPropertyDefinition = {
   set: noop
 }
 
+//给某个对象代理
+/*
+1. 在Vue实例的data属性与用户自定义方法重名时使用到,以读取属性为主
+*/
 export function proxy (target: Object, sourceKey: string, key: string) {
   sharedPropertyDefinition.get = function proxyGetter () {
     return this[sourceKey][key]
@@ -59,6 +63,7 @@ export function initState (vm: Component) {
   }
   // 初始化computed
   if (opts.computed) initComputed(vm, opts.computed)
+  // 初始化watch,(火狐浏览器的 Object 原型上有 watch方法)
   if (opts.watch && opts.watch !== nativeWatch) {
     initWatch(vm, opts.watch)
   }
@@ -169,6 +174,7 @@ function initData (vm: Component) {
       1. 当属性不是以_ 或者$ 开头并且与methods方法冲突的时候,读取 或者设置数据的时候 以属性为准
       2. 因为data返回的对象 赋值给了 vm._data对象
       */
+     // isReserved 判断是否以$ 或者 _ 开头
     } else if (!isReserved(key)) {
       proxy(vm, `_data`, key)
     }
@@ -250,6 +256,7 @@ export function defineComputed (
   key: string,
   userDef: Object | Function
 ) {
+  // 在服务端渲染不需要缓存数据
   const shouldCache = !isServerRendering()
   if (typeof userDef === 'function') {
     sharedPropertyDefinition.get = shouldCache
@@ -264,6 +271,7 @@ export function defineComputed (
       : noop
     sharedPropertyDefinition.set = userDef.set || noop
   }
+  // 设置了getter必须设置setter
   if (process.env.NODE_ENV !== 'production' &&
       sharedPropertyDefinition.set === noop) {
     sharedPropertyDefinition.set = function () {
@@ -277,6 +285,7 @@ export function defineComputed (
 }
 
 function createComputedGetter (key) {
+  // const watchers = vm._computedWatchers = Object.create(null)
   return function computedGetter () {
     const watcher = this._computedWatchers && this._computedWatchers[key]
     if (watcher) {
@@ -333,6 +342,7 @@ function initMethods (vm: Component, methods: Object) {
 function initWatch (vm: Component, watch: Object) {
   for (const key in watch) {
     const handler = watch[key]
+    //判断 是否是一个数组， 数组的每项是一个函数
     if (Array.isArray(handler)) {
       for (let i = 0; i < handler.length; i++) {
         createWatcher(vm, key, handler[i])
@@ -343,12 +353,14 @@ function initWatch (vm: Component, watch: Object) {
   }
 }
 
+// createWatcher 主要将 对象的 handler提取出来,并且将options赋值给传递的options对象
 function createWatcher (
   vm: Component,
-  expOrFn: string | Function,
+  expOrFn: string | Function, // 可能是一个函数, 也可能是一个字符串,键值为对象，函数在对象的handler上
   handler: any,
   options?: Object
 ) {
+  // 如果是对象的话, 将handler.handler 赋值给 handler
   if (isPlainObject(handler)) {
     options = handler
     handler = handler.handler
@@ -385,7 +397,7 @@ export function stateMixin (Vue: Class<Component>) {
   Vue.prototype.$set = set
   Vue.prototype.$delete = del
 
-  Vue.prototype.$watch = function (
+  Vue.prototype.$watch = function ( // 用来监听数据变化的$watch方法
     expOrFn: string | Function,
     cb: any,
     options?: Object
