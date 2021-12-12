@@ -28,7 +28,7 @@ export function toggleObserving (value: boolean) {
   shouldObserve = value
 }
 
-/**
+/*
 给对象添加一对 键值
 function def (obj, key, val) {
   Object.defineProperty(obj, key, {
@@ -49,10 +49,18 @@ export class Observer {
     this.dep = new Dep()
     this.vmCount = 0
     def(value, '__ob__', this)  // 给当前对象添加一个__ob__对象, 是当前对响应式对象,用来缓存
+    /*
+    arrayMethods 是一个对象, 对可以修改原数组的方法方法做一层拦截，该对象的原型是 数组真正的原型 即Array.prototype.
+    1. 如果数组支持 __proto__, 直接给数组的 __proto__ 赋值为该对象
+    2. 不支持__proto__, 通过definePrototype 将每个处理好的方法 直接定义到 array
+    */
     if (Array.isArray(value)) {
-      if (hasProto) {
+      if (hasProto) { // 是否有__proto__ 属性
+        // target.__proto__ = src
+        //          target  src
         protoAugment(value, arrayMethods)
       } else {
+        // 如果不支持__proto__, 将定义好的拦截方法 一个一个的 添加到 数组的原型上
         copyAugment(value, arrayMethods, arrayKeys)
       }
       this.observeArray(value)
@@ -69,7 +77,7 @@ export class Observer {
   }
 
   /**
-   * Observe a list of Array items.
+   * 如果数组中的项是对象, 将其变为响应式对象
    */
   observeArray (items: Array<any>) {
     for (let i = 0, l = items.length; i < l; i++) {
@@ -78,23 +86,12 @@ export class Observer {
   }
 }
 
-// helpers
-
-/**
- * Augment a target Object or Array by intercepting
- * the prototype chain using __proto__
- */
+// helpers  将某个对象添加到数组到原型上
 function protoAugment (target, src: Object) {
-  /* eslint-disable no-proto */
   target.__proto__ = src
-  /* eslint-enable no-proto */
 }
 
-/**
- * Augment a target Object or Array by defining
- * hidden properties.
- */
-/* istanbul ignore next */
+// 对不支持__proto__ 属性的对象, 将定义好的拦截方法 通过Object.definePrototype的方法 一个一个定义到对象上。
 function copyAugment (target: Object, src: Object, keys: Array<string>) {
   for (let i = 0, l = keys.length; i < l; i++) {
     const key = keys[i]
@@ -133,7 +130,7 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
 }
 
 /**
- * Define a reactive property on an Object.
+ * 定义一个响应式对象
  */
 export function defineReactive (
   obj: Object,
@@ -142,14 +139,15 @@ export function defineReactive (
   customSetter?: ?Function,
   shallow?: boolean
 ) {
-  const dep = new Dep()
-
+  const dep = new Dep() // 用来收集属性依赖
+// 获取对象属性的属性描述符, (对象的自由属性,不需要从原型链上进行查找的属性)
   const property = Object.getOwnPropertyDescriptor(obj, key)
+  // 不存在某个属性的时候 返回undefined, 并判断属性是否是可配置的
   if (property && property.configurable === false) {
     return
   }
 
-  // cater for pre-defined getter/setters
+  // 用户可能传入getter 或者 setter。
   const getter = property && property.get
   const setter = property && property.set
   if ((!getter || setter) && arguments.length === 2) {
@@ -161,6 +159,7 @@ export function defineReactive (
     enumerable: true,
     configurable: true,
     get: function reactiveGetter () {
+      // 如果传入了getter函数, 则访问属性的时候 返回自定义getter 返回的值
       const value = getter ? getter.call(obj) : val
       if (Dep.target) {
         dep.depend()
@@ -174,8 +173,9 @@ export function defineReactive (
       return value
     },
     set: function reactiveSetter (newVal) {
+      // 先获取之前的值,
       const value = getter ? getter.call(obj) : val
-      /* eslint-disable no-self-compare */
+      // 如果两者相等 或者 新旧值为NaN的时候 直接返回
       if (newVal === value || (newVal !== newVal && value !== value)) {
         return
       }
@@ -185,12 +185,15 @@ export function defineReactive (
       }
       // #7981: for accessor properties without setter
       if (getter && !setter) return
+      // 如果传入了setter函数, 调用用户传入的setter。
       if (setter) {
         setter.call(obj, newVal)
       } else {
+        // 否则直接给value 赋值为 newValue
         val = newVal
       }
       childOb = !shallow && observe(newVal)
+      // 数据更新的时候 发送通知
       dep.notify()
     }
   })

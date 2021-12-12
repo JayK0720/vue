@@ -63,17 +63,18 @@ export function initLifecycle (vm: Component) {
 export function lifecycleMixin (Vue: Class<Component>) {
   Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
     const vm: Component = this
+    // 渲染的上一个el 和 上一次的 vnode
     const prevEl = vm.$el
     const prevVnode = vm._vnode
     const restoreActiveInstance = setActiveInstance(vm)
-    vm._vnode = vnode
+    vm._vnode = vnode // 这一次的vnode
     // Vue.prototype.__patch__ is injected in entry points
     // based on the rendering backend used.
     if (!prevVnode) {
-      // initial render
+      // 如果没有preVnode, 则是首次渲染
       vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */)
     } else {
-      // updates
+      // 否则 就是更新
       vm.$el = vm.__patch__(prevVnode, vnode)
     }
     restoreActiveInstance()
@@ -91,7 +92,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
     // updated hook is called by the scheduler to ensure that children are
     // updated in a parent's updated hook.
   }
-
+  // 强制更新组件
   Vue.prototype.$forceUpdate = function () {
     const vm: Component = this
     if (vm._watcher) {
@@ -99,14 +100,16 @@ export function lifecycleMixin (Vue: Class<Component>) {
     }
   }
 
+  // 销毁组件
   Vue.prototype.$destroy = function () {
     const vm: Component = this
-    if (vm._isBeingDestroyed) {
+    if (vm._isBeingDestroyed) { // 如果正在销毁,直接返回 vm._isBeingDestroyed：是一个标识符
       return
     }
+    // 调用生命周期钩子函数 beforeDestroy
     callHook(vm, 'beforeDestroy')
     vm._isBeingDestroyed = true
-    // remove self from parent
+    // 从父组件移除自身, (该组件不是抽象组件)
     const parent = vm.$parent
     if (parent && !parent._isBeingDestroyed && !vm.$options.abstract) {
       remove(parent.$children, vm)
@@ -142,17 +145,17 @@ export function lifecycleMixin (Vue: Class<Component>) {
     }
   }
 }
-
+// 挂载组件
 export function mountComponent (
   vm: Component,
   el: ?Element,
   hydrating?: boolean
 ): Component {
   vm.$el = el
-  if (!vm.$options.render) {
+  if (!vm.$options.render) {  // 如果没有render方法, 创建空的虚拟dom
     vm.$options.render = createEmptyVNode
     if (process.env.NODE_ENV !== 'production') {
-      /* istanbul ignore if */
+      /* 运行时代码不支持template选项，需要使用带编译器的版本 */
       if ((vm.$options.template && vm.$options.template.charAt(0) !== '#') ||
         vm.$options.el || el) {
         warn(
@@ -169,6 +172,7 @@ export function mountComponent (
       }
     }
   }
+  // beforeMount 钩子函数注册, 开始挂载
   callHook(vm, 'beforeMount')
 
   let updateComponent
