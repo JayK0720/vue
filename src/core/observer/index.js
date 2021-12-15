@@ -200,25 +200,46 @@ export function defineReactive (
 }
 
 /**
- * Set a property on an object. Adds the new property and
- * triggers change notification if the property doesn't
- * already exist.
+给一个响应式对象动态添加属性 使之成为响应式
  */
 export function set (target: Array<any> | Object, key: any, val: any): any {
+  // 首先判断 添加的属性 是否是一个对象上添加
+  /*
+  function isUndef (){
+    return v === undefined || v === null
+  }
+  function isPrimitive () {
+    return (
+      typeof value === 'string' ||
+      typeof value === 'number' ||
+      // $flow-disable-line
+      typeof value === 'symbol' ||
+      typeof value === 'boolean'
+    )
+ */
   if (process.env.NODE_ENV !== 'production' &&
     (isUndef(target) || isPrimitive(target))
   ) {
     warn(`Cannot set reactive property on undefined, null, or primitive value: ${(target: any)}`)
   }
+  /*
+  function isValidArrayIndex (){  判断数组下标是不是一个合法的 数字
+    const n = parseFloat(String(val))
+    return n >= 0 && Math.floor(n) === n && isFinite(val)
+  }
+  */
   if (Array.isArray(target) && isValidArrayIndex(key)) {
+    //可能原始数组 只有3项, 但是给第100项添加了数据, 所以找数组长度和添加数据位置 的最大值
     target.length = Math.max(target.length, key)
     target.splice(key, 1, val)
     return val
   }
+  // 如果属性已经在对象上 并且 不是对象原型上的属性, 直接赋值就可以了
   if (key in target && !(key in Object.prototype)) {
     target[key] = val
     return val
   }
+  // 不能给vm 或者 $data 添加响应式数据
   const ob = (target: any).__ob__
   if (target._isVue || (ob && ob.vmCount)) {
     process.env.NODE_ENV !== 'production' && warn(
@@ -227,6 +248,7 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
     )
     return val
   }
+  // 如果不是给响应式对象 添加属性
   if (!ob) {
     target[key] = val
     return val
@@ -257,6 +279,7 @@ export function del (target: Array<any> | Object, key: any) {
     )
     return
   }
+  // 判断删除的属性是否存在对象上
   if (!hasOwn(target, key)) {
     return
   }

@@ -226,7 +226,7 @@ function initComputed (vm: Component, computed: Object) {
         vm,
         getter || noop,
         noop,
-        computedWatcherOptions
+        computedWatcherOptions  // {lazy:true}, 计算属性在模版中调用 再执行函数的
       )
     }
 
@@ -342,7 +342,7 @@ function initMethods (vm: Component, methods: Object) {
 function initWatch (vm: Component, watch: Object) {
   for (const key in watch) {
     const handler = watch[key]
-    //判断 是否是一个数组， 数组的每项是一个函数
+    //判断 是否是一个数组， 如果是一个数组, 每个函数在数据变化的时候 都会执行
     if (Array.isArray(handler)) {
       for (let i = 0; i < handler.length; i++) {
         createWatcher(vm, key, handler[i])
@@ -355,9 +355,9 @@ function initWatch (vm: Component, watch: Object) {
 
 // createWatcher 主要将 对象的 handler提取出来,并且将options赋值给传递的options对象
 function createWatcher (
-  vm: Component,
+  vm: Component,  // 实例
   expOrFn: string | Function, // 可能是一个函数, 也可能是一个字符串,键值为对象，函数在对象的handler上
-  handler: any,
+  handler: any, // 函数 或者对象
   options?: Object
 ) {
   // 如果是对象的话, 将handler.handler 赋值给 handler
@@ -365,6 +365,7 @@ function createWatcher (
     options = handler
     handler = handler.handler
   }
+  // 如果方法名是一个字符串, 会去找methods中定义的方法
   if (typeof handler === 'string') {
     handler = vm[handler]
   }
@@ -407,9 +408,10 @@ export function stateMixin (Vue: Class<Component>) {
       return createWatcher(vm, expOrFn, cb, options)
     }
     options = options || {}
+    // 用户watcher
     options.user = true
     const watcher = new Watcher(vm, expOrFn, cb, options)
-    if (options.immediate) {
+    if (options.immediate) {  // 是否立即执行
       const info = `callback for immediate watcher "${watcher.expression}"`
       pushTarget()
       invokeWithErrorHandling(cb, vm, [watcher.value], vm, info)

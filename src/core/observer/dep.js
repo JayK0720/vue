@@ -43,15 +43,18 @@ export default class Dep {
       // order
       subs.sort((a, b) => a.id - b.id)
     }
+    // 调用每个watcher的update方法 通知更新
     for (let i = 0, l = subs.length; i < l; i++) {
       subs[i].update()
     }
   }
 }
 
-// The current target watcher being evaluated.
-// This is globally unique because only one watcher
-// can be evaluated at a time.
+/*
+1. 入栈并将当前watcher 赋值给 Dep.target
+2. 父子组件嵌套的时候先把父组件对应的watcher入栈, 再去处理子组件的watcher, 子组件处理完毕后,再把父组件的watcher出栈
+3. Dep.target 用来存放当前正在使用的Watcher
+*/
 Dep.target = null
 const targetStack = []
 

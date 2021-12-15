@@ -40,7 +40,7 @@ Object.defineProperty(Vue, 'config', configDef)
     defineReactive
   }
 
-  Vue.set = set
+  Vue.set = set // 给一个响应式对象动态添加 属性使之成为响应式属性
   Vue.delete = del
   Vue.nextTick = nextTick
 

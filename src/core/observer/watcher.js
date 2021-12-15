@@ -24,6 +24,11 @@ let uid = 0
  * and fires callback when the expression value changes.
  * This is used for both the $watch() api and directives.
  */
+/*
+1. 先执行computed watcher
+2. 再执行watch 监听器
+3. 最后执行渲染watcher
+*/
 export default class Watcher {
   vm: Component;
   expression: string;
@@ -80,6 +85,7 @@ export default class Watcher {
     if (typeof expOrFn === 'function') {
       this.getter = expOrFn
     } else {
+      // watch 监听器传入的内容, 可能会传入一个字符串 监听对象的某个属性
       this.getter = parsePath(expOrFn)
       if (!this.getter) {
         this.getter = noop

@@ -1,5 +1,13 @@
 /* @flow */
-
+// 描述真实dom的JavaScript对象，借鉴了snabbdom.
+/*
+tag
+data
+children
+text
+elm
+key
+*/
 export default class VNode {
   tag: string | void;
   data: VNodeData | void;
